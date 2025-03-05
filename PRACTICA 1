@@ -133,7 +133,31 @@ void loop()
 }
 
 
+exercici de puja nota 
 
+#include <Arduino.h>
+
+#define ADC_PIN 34  
+#define DAC_PIN 25   
+
+void setup() {
+    Serial.begin(115200);  
+    pinMode(ADC_PIN, INPUT);  
+}
+
+void loop() {
+    int valorADC = analogRead(ADC_PIN);  
+    int valorDAC = map(valorADC, 0, 4095, 0, 255);  
+
+    Serial.print("ADC: ");
+    Serial.print(valorADC);
+    Serial.print(" | DAC: ");
+    Serial.println(valorDAC);
+
+    dacWrite(DAC_PIN, valorDAC);  
+
+    delay(500);  
+}
 
 
 

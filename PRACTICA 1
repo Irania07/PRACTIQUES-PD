@@ -20,3 +20,122 @@ void loop() {
   delay(DELAY);                    // Esperar 1000 ms
 }
 
+
+1.3) 
+
+#include <Arduino.h>
+#include "soc/gpio_reg.h"
+
+
+#define LED_PIN 2
+#define DELAY 1000
+
+
+void setup() {
+  Serial.begin(115200);
+ 
+  // Configura el pin 2 (LED_BUILTIN) como salida
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  // Encender el LED (activar el pin)
+  GPIO.out_w1ts = (1 << LED_PIN); // Set the output to high (turn on)
+  Serial.println("ON");
+  delay(DELAY);
+
+
+  // Apagar el LED (desactivar el pin)
+  GPIO.out_w1tc = (1 << LED_PIN); // Set the output to low (turn off)
+  Serial.println("OFF");  
+ delay(DELAY);
+}
+
+4.1)  
+
+
+#include <Arduino.h> 
+#define LED_PIN 4  
+
+void setup() {
+  Serial.begin(115200);  
+  pinMode(LED_PIN, OUTPUT);  
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH); 
+  Serial.println("ON");  
+  
+  digitalWrite(LED_PIN, LOW);   
+  Serial.println("OFF"); 
+} 
+
+
+4.2) 
+#include <Arduino.h>  
+#include "soc/gpio_reg.h" 
+#define LED_PIN 4  
+
+void setup() {
+  Serial.begin(115200);  
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  GPIO.out_w1ts = (1 << LED_PIN);  
+  Serial.println("ON");  
+  GPIO.out_w1tc = (1 << LED_PIN);  
+  Serial.println("OFF");  
+
+4.3) 
+#define LED_PIN 4  
+void setup() {
+pinMode(LED_PIN, OUTPUT); 
+}
+void loop() {
+ digitalWrite(LED_PIN, HIGH); 
+ digitalWrite(LED_PIN, LOW);  
+}   
+
+4.4 )   
+#include <Arduino.h> 
+#include "soc/gpio_reg.h"  
+#define PIN_SALIDA 4 
+void setup() {
+    uint32_t *gpio_enable = (uint32_t *)GPIO_ENABLE_REG;
+    *gpio_enable |= (1 << PIN_SALIDA);  
+}
+
+void loop() {
+    uint32_t *gpio_out = (uint32_t *)GPIO_OUT_REG;
+    *gpio_out ^= (1 << PIN_SALIDA); 
+
+6) 
+
+#include <Arduino.h>  
+#include "soc/gpio_reg.h" 
+#define PIN_SALIDA 4  
+void setup() {
+    Serial.begin(115200); 
+    uint32_t *gpio_enable = (uint32_t *)GPIO_ENABLE_REG;
+    *gpio_enable |= (1 << PIN_SALIDA); 
+}
+void loop() 
+{uint32_t *gpio_out = (uint32_t *)GPIO_OUT_REG;  
+ unsigned long t1 = micros();  
+    *gpio_out |= (1 << PIN_SALIDA);  
+    *gpio_out &= ~(1 << PIN_SALIDA);  
+     unsigned long t2 = micros();  
+    Serial.print("Tiempo de ejecución: ");  
+    Serial.print(t2 - t1);  
+    Serial.println(" us");
+    delay(1000); 
+}
+
+
+
+
+
+
+
+

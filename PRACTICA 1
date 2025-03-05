@@ -1,0 +1,22 @@
+CODIGO PRACTICA 1 
+
+1.2) 
+
+#define LED_BUILTIN 2  // Pin del LED (cambia si usas otro)
+#define DELAY 1000     // Tiempo de espera en milisegundos
+
+void setup() { 
+  pinMode(LED_BUILTIN, OUTPUT);  // Iniciar el pin del LED como salida
+  Serial.begin(115200);          // Iniciar el puerto serie
+} 
+ 
+void loop() { 
+  digitalWrite(LED_BUILTIN, HIGH); // Encender LED
+  Serial.println("ON");            // Enviar mensaje al puerto serie
+  delay(DELAY);                    // Esperar 1000 ms
+
+  digitalWrite(LED_BUILTIN, LOW);  // Apagar LED
+  Serial.println("OFF");           // Enviar mensaje al puerto serie
+  delay(DELAY);                    // Esperar 1000 ms
+}
+

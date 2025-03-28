@@ -1,0 +1,192 @@
+// PRACTICA 5 
+
+// CODIGO EJERCICIO 1 
+
+#include <Arduino.h>
+#include <Wire.h>
+
+void setup() {
+  Wire.begin();           
+  Serial.begin(115200);   
+  while (!Serial);        
+  Serial.println("\nI2C Scanner");
+}
+
+void loop() {
+  byte error, address;
+  int nDevices = 0;
+
+  Serial.println("Scanning...");
+
+  for (address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0) {
+      Serial.print("I2C device found at address 0x");
+      if (address < 16) Serial.print("0");
+      Serial.print(address, HEX);
+      Serial.println("  !");
+
+      nDevices++;
+    }
+    else if (error == 4) {
+      Serial.print("Unknown error at address 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+    }
+  }
+
+  if (nDevices == 0) {
+    Serial.println("No I2C devices found\n");
+  } else {
+    Serial.println("Scan complete.\n");
+  }
+
+  delay(5000); 
+}  
+
+
+
+// EJERCICIO 2 
+
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C  
+
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+void setup() {
+  Serial.begin(115200);
+
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println("Error al iniciar SSD1306");
+    for (;;);
+  }
+
+
+  display.clearDisplay();  
+  display.setTextSize(2);   
+  display.setTextColor(SSD1306_WHITE); 
+
+
+  display.setCursor(20, 1);
+  display.println("Hola");
+
+
+  display.setCursor(100, 15);
+  display.println("P5");
+
+
+  display.display(); 
+} 
+
+void loop() {
+  // No hace falta repetir, la pantalla mantiene el texto
+}
+
+
+
+// EJERCICIO DE SUBIDA DE NOTA 
+
+#include <Wire.h>
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "MAX30102.h"
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+MAX30102 sensor;  // Usar la librería MAX30102 by Protocentral
+
+const char* ssid = "TuWiFi";
+const char* password = "TuClave";
+
+AsyncWebServer server(80);
+
+float bpm = 0;
+float spo2 = 0;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  // Iniciar pantalla OLED
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Error al iniciar pantalla OLED");
+    while (1);
+  }
+  display.clearDisplay();
+
+  // Iniciar MAX30102
+  if (!sensor.begin()) {
+    Serial.println("Error al iniciar MAX30102");
+    while (1);
+  }
+
+  Serial.println("MAX30102 inicializado correctamente");
+
+  // Conectar a WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectando a WiFi...");
+  }
+  Serial.print("Conectado a WiFi, IP: ");
+  Serial.println(WiFi.localIP());
+
+  // Servidor web para enviar datos
+  server.on("/datos", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String json = "{";
+    json += "\"bpm\":" + String(bpm) + ",";
+    json += "\"spo2\":" + String(spo2);
+    json += "}";
+    request->send(200, "application/json", json);
+  });
+
+  server.begin();
+}
+
+void loop() {
+  int32_t red, ir;
+  if (sensor.check() == true) {
+    sensor.getRawValues(&red, &ir);
+    sensor.getHeartRateAndSpO2(&bpm, &spo2);
+
+    if (bpm > 0 && spo2 > 0) {
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 0);
+      display.print("BPM: ");
+      display.println(bpm);
+      display.print("SpO2: ");
+      display.println(spo2);
+      display.display();
+    }
+  }
+
+  delay(1000);
+}
+
+
+
+
+
+
+
+
+
+

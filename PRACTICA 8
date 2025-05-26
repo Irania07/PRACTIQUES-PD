@@ -1,0 +1,73 @@
+PRACICA 8 
+Buses de comunicación IV
+(uart) 
+
+EJERCICIO 1 
+#include <Arduino.h>  // Incluye la librería principal de Arduino
+
+void setup() {
+  Serial.begin(115200);     // Inicializa la UART0 (comunicación por USB con el PC) a 115200 baudios
+  Serial2.begin(115200);    // Inicializa la UART2 (pines específicos en placas como ESP32) a 115200 baudios
+}
+
+void loop() {
+  // Si hay datos disponibles en la UART0 (enviados desde el PC)
+  if (Serial.available()) {
+    char c = Serial.read();    // Lee un carácter desde UART0
+    Serial2.write(c);          // Lo envía por UART2
+  }
+
+  // Si hay datos disponibles en la UART2 (enviados desde un dispositivo conectado)
+  if (Serial2.available()) {
+    char c = Serial2.read();   // Lee un carácter desde UART2
+    Serial.write(c);           // Lo envía por UART0 (monitor serie del PC)
+  }
+}
+
+
+EJERCICIO 2 
+
+#include <TinyGPS.h>
+
+TinyGPS gps;  // Objeto para decodificar datos GPS
+
+// Pines del ESP32 para UART2 (adaptados al GPS)
+#define RXD2 16
+#define TXD2 17
+
+void setup() {
+  Serial.begin(115200);  // Consola serie para depuración
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);  // Comunicación UART con el módulo GPS
+}
+
+void loop() {
+  bool newData = false;
+  unsigned long chars;
+  unsigned short sentences, failed;
+
+  // Leer datos del GPS durante 1 segundo
+  for (unsigned long start = millis(); millis() - start < 1000;) {
+    while (Serial2.available()) {
+      char c = Serial2.read();       // Leer un carácter
+      if (gps.encode(c)) newData = true;  // Decodificar si es parte de un mensaje válido
+    }
+  }
+
+  // Si se recibió una nueva posición, mostrarla
+  if (newData) {
+    float flat, flon;
+    unsigned long age;
+    gps.f_get_position(&flat, &flon, &age);
+
+    Serial.print("LAT="); Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+    Serial.print(" LON="); Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    Serial.print(" SAT="); Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    Serial.print(" PREC="); Serial.println(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
+  }
+
+  // Estadísticas de la recepción
+  gps.stats(&chars, &sentences, &failed);
+  Serial.print("CHARS="); Serial.print(chars);
+  Serial.print(" SENTENCES="); Serial.print(sentences);
+  Serial.print(" CSUM ERR="); Serial.println(failed);
+}
